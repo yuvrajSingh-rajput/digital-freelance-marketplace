@@ -1,0 +1,22 @@
+console.log("Bidder jobs (freelancer1):", bidderJobs);
+const bidderJobs = await contract.connect(ethers.provider.getSigner(2)).getJobsForBidder();
+console.log("Assigned jobs (freelancer1):", assignedJobs);
+const assignedJobs = await contract.connect(ethers.provider.getSigner(2)).getAssignedJobs();
+console.log("My jobs (client1):", myJobs);
+const myJobs = await contract.connect(ethers.provider.getSigner(1)).getMyJobs();
+console.log("All jobs:", jobs);
+const jobs = await contract.getJobs();
+const contract = await ethers.getContractAt("DappWorks", "0xf5059a5d33d5853360d16c683c16e67980206f36");
+console.log("Bidder jobs (freelancer1):", bidderJobs);
+const bidderJobs = await contract.connect(ethers.provider.getSigner(2)).getJobsForBidder(); // freelancer1
+console.log("Assigned jobs (freelancer1):", assignedJobs);
+const assignedJobs = await contract.connect(ethers.provider.getSigner(2)).getAssignedJobs(); // freelancer1
+console.log("My jobs (client1):", myJobs);
+const myJobs = await contract.connect(ethers.provider.getSigner(1)).getMyJobs(); // client1
+console.log("All jobs:", jobs);
+const jobs = await contract.getJobs();
+const contract = await ethers.getContractAt("DappWorks", "0xf5059a5d33d5853360d16c683c16e67980206f36");
+await contract.getJobs();
+const contract = await ethers.getContractAt("DappWorks", "0x959922bE3CAee4b8Cd9a407cc3ac1C251C2007B1");
+await contract.getJobs();
+const contract = await ethers.getContractAt("DappWorks", "0xYourDeployedContractAddress");
