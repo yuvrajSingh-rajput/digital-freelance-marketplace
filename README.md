@@ -78,4 +78,3 @@ Access the [Teaching Guide Here](https://docs.google.com/document/d/13bBRyAO0bEw
 - 👀 [EthersJs](https://docs.ethers.io/v5/)
 - 🎅 [Faucet](https://www.alchemy.com/faucets)
 - ✨ [Live Demo](https://dappworks.vercel.app/)
-# digital-freelance-marketplace
