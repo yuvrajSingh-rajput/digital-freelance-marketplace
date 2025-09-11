@@ -1,6 +1,4 @@
-# Build a Decentralized Voting Dapp with Next.js, TypeScript, Tailwind CSS, and CometChat
-
-Read the full tutorial here: [**>> Build a Decentralized Voting Dapp with Next.js, TypeScript, Tailwind CSS, and CometChat**](https://daltonic.github.io)
+# Build a Decentralized Freelance Marketplace Dapp with Next.js, TypeScript, Tailwind CSS, and CometChat
 
 This example shows How to Build a Decentralized Voting Dapp with Next.js, TypeScript, Tailwind CSS, and CometChat:
 
@@ -38,7 +36,7 @@ To run the demo follow these steps:
    ```sh
 
    # Make sure you have the above prerequisites installed already!
-   git clone https://github.com/Daltonic/P2E PROJECT_NAME
+   git clone https://github.com/yuvrajSingh-rajput/digital-freelance-marketplace.git
    cd PROJECT_NAME # Navigate to the new folder.
    yarn install # Installs all the dependencies.
    ```
@@ -62,8 +60,7 @@ To run the demo follow these steps:
    <br/>
 
 If your confuse about the installation, check out this **TUTORIAL** to see how you should run it.
-
-Questions about running the demo? [Open an issue](https://github.com/Daltonic/P2E/issues). We're here to help ✌️
+<!--  -->
 Access the [Teaching Guide Here](https://docs.google.com/document/d/13bBRyAO0bEwRt776FXbYgWm6-OBFiUu6zTeOgRbXXyI/edit?usp=sharing).
 
 ## Useful links
