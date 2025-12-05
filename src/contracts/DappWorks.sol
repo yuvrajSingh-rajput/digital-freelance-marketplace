@@ -1,4 +1,4 @@
-//SPDX-License-Identifier:MIT
+// SPDX-License-Identifier: MIT
 pragma solidity >=0.7.0 <0.9.0;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
@@ -10,6 +10,7 @@ contract DappWorks is Ownable, ReentrancyGuard {
     using Counters for Counters.Counter;
 
     Counters.Counter private _jobCounter;
+    Counters.Counter private _assignmentCounter;
 
     struct JobStruct {
         uint id;
@@ -24,6 +25,20 @@ contract DappWorks is Ownable, ReentrancyGuard {
         bool listed;
         bool disputed;
         address[] bidders;
+    }
+
+    struct AssignmentStruct {
+        uint id;
+        address owner;
+        string title;
+        string description;
+        string tags;
+        address[] applicants;
+        address acceptedStudent;
+        bool completed;
+        bool certified;
+        uint timestamp;
+        bool active;
     }
 
     struct FreelancerStruct {
@@ -45,14 +60,26 @@ contract DappWorks is Ownable, ReentrancyGuard {
     mapping(uint => FreelancerStruct[]) freelancers;
     mapping(uint => BidStruct[]) jobBidders;
 
+    mapping(uint => AssignmentStruct) assignmentListings;
+    mapping(uint => address[]) assignmentApplicants; // For tracking applicants per assignment
+
     mapping(uint => bool) jobListingExists;
     mapping(uint => mapping(address => bool)) public hasPlacedBid;
+
+    mapping(uint => bool) assignmentExists;
+    mapping(uint => mapping(address => bool)) public hasAppliedForAssignment;
 
     modifier onlyJobOwner(uint id) {
         require(jobListings[id].owner == msg.sender, "Unauthorized entity");
         _;
     }
 
+    modifier onlyAssignmentOwner(uint id) {
+        require(assignmentListings[id].owner == msg.sender, "Unauthorized entity");
+        _;
+    }
+
+    // Job-related functions (existing)
     function addJobListing(
         string memory jobTitle,
         string memory description,
@@ -63,7 +90,6 @@ contract DappWorks is Ownable, ReentrancyGuard {
         require(bytes(tags).length > 0, "Please provide tags");
         require(msg.value > 0 ether, "Insufficient funds");
 
-        // Increment the counter before using the current value
         _jobCounter.increment();
         uint jobId = _jobCounter.current();
 
@@ -170,7 +196,6 @@ contract DappWorks is Ownable, ReentrancyGuard {
         require(jobListings[jId].disputed, "This job must be on dispute");
         require(!jobListings[jId].paidOut, "This job has been paid out");
 
-        // Use two separate indexes to access the FreelancerStruct
         FreelancerStruct storage freelancer = freelancers[jId][id];
 
         freelancer.isAssigned = false;
@@ -202,6 +227,71 @@ contract DappWorks is Ownable, ReentrancyGuard {
         jobListings[id].paidOut = true;
     }
 
+    // Assignment-related functions
+    function createAssignment(
+        string memory _title,
+        string memory _description,
+        string memory _tags
+    ) public {
+        require(bytes(_title).length > 0, "Please provide a title");
+        require(bytes(_description).length > 0, "Please provide a description");
+        require(bytes(_tags).length > 0, "Please provide tags");
+
+        _assignmentCounter.increment();
+        uint assignmentId = _assignmentCounter.current();
+
+        AssignmentStruct memory assignment;
+
+        assignment.id = assignmentId;
+        assignment.owner = msg.sender;
+        assignment.title = _title;
+        assignment.description = _description;
+        assignment.tags = _tags;
+        assignment.active = true;
+        assignment.timestamp = currentTime();
+
+        assignmentListings[assignmentId] = assignment;
+        assignmentExists[assignmentId] = true;
+    }
+
+    function applyForAssignment(uint _id) public {
+        require(assignmentExists[_id], "This assignment doesn't exist");
+        require(assignmentListings[_id].owner != msg.sender, "Owner cannot apply");
+        require(assignmentListings[_id].active, "Assignment is no longer active");
+        require(!hasAppliedForAssignment[_id][msg.sender], "You have already applied");
+
+        hasAppliedForAssignment[_id][msg.sender] = true;
+        assignmentListings[_id].applicants.push(msg.sender);
+    }
+
+    function acceptApplicant(uint _id, uint _applicantIndex) public onlyAssignmentOwner(_id) {
+        require(assignmentExists[_id], "This assignment doesn't exist");
+        require(assignmentListings[_id].active, "Assignment is no longer active");
+        require(_applicantIndex < assignmentListings[_id].applicants.length, "Invalid applicant index");
+
+        assignmentListings[_id].acceptedStudent = assignmentListings[_id].applicants[_applicantIndex];
+        assignmentListings[_id].active = false;
+    }
+
+    function completeAssignment(uint _id) public {
+        require(assignmentExists[_id], "This assignment doesn't exist");
+        require(assignmentListings[_id].acceptedStudent == msg.sender, "Only accepted student can complete");
+        require(!assignmentListings[_id].completed, "Already completed");
+
+        assignmentListings[_id].completed = true;
+    }
+
+    function issueCertificate(uint _id) public onlyAssignmentOwner(_id) {
+        require(assignmentExists[_id], "This assignment doesn't exist");
+        require(assignmentListings[_id].completed, "Assignment must be completed first");
+        require(!assignmentListings[_id].certified, "Certificate already issued");
+
+        assignmentListings[_id].certified = true;
+
+        emit CertificateIssued(_id, assignmentListings[_id].acceptedStudent, assignmentListings[_id].title);
+    }
+
+    // Getters for Jobs (existing)
     function getBidders(
         uint id
     ) public view returns (BidStruct[] memory Bidders) {
@@ -229,7 +319,6 @@ contract DappWorks is Ownable, ReentrancyGuard {
             }
         }
 
-        // If no freelancer is assigned, return an empty struct or handle it as needed.
         FreelancerStruct memory emptyFreelancer;
         return emptyFreelancer;
     }
@@ -318,7 +407,6 @@ contract DappWorks is Ownable, ReentrancyGuard {
     }
 
     function getBidsForBidder() public view returns (BidStruct[] memory Bids) {
-        // Create a dynamic array to store the bids
         BidStruct[] memory allBids = new BidStruct[](_jobCounter.current());
         uint currentIndex = 0;
 
@@ -329,7 +417,6 @@ contract DappWorks is Ownable, ReentrancyGuard {
                 !jobListings[i].paidOut
             ) {
                 if (hasPlacedBid[i][msg.sender]) {
-                    // Iterate over the bids for the current job and add matching bids to the array
                     for (uint j = 0; j < jobBidders[i].length; j++) {
                         if (jobBidders[i][j].account == msg.sender) {
                             allBids[currentIndex] = jobBidders[i][j];
@@ -340,7 +427,6 @@ contract DappWorks is Ownable, ReentrancyGuard {
             }
         }
 
-        // Create a new array with only the relevant bids
         Bids = new BidStruct[](currentIndex);
         for (uint k = 0; k < currentIndex; k++) {
             Bids[k] = allBids[k];
@@ -354,7 +440,6 @@ contract DappWorks is Ownable, ReentrancyGuard {
         view
         returns (JobStruct[] memory bidderJobs)
     {
-        // Create a dynamic array to store the jobs
         JobStruct[] memory matchingJobs = new JobStruct[](
             _jobCounter.current()
         );
@@ -373,7 +458,6 @@ contract DappWorks is Ownable, ReentrancyGuard {
             }
         }
 
-        // Create a new array with only the relevant jobs
         bidderJobs = new JobStruct[](currentIndex);
         for (uint k = 0; k < currentIndex; k++) {
             bidderJobs[k] = matchingJobs[k];
@@ -382,8 +466,90 @@ contract DappWorks is Ownable, ReentrancyGuard {
         return bidderJobs;
     }
 
-    // private function
+    // Getters for Assignments
+    function getAssignments() public view returns (AssignmentStruct[] memory ActiveAssignments) {
+        uint available;
+        uint currentIndex = 0;
 
+        for (uint256 i = 1; i <= _assignmentCounter.current(); i++) {
+            if (
+                assignmentExists[i] &&
+                assignmentListings[i].active &&
+                !assignmentListings[i].certified
+            ) {
+                available++;
+            }
+        }
+
+        ActiveAssignments = new AssignmentStruct[](available);
+
+        for (uint256 i = 1; i <= _assignmentCounter.current(); i++) {
+            if (
+                assignmentExists[i] &&
+                assignmentListings[i].active &&
+                !assignmentListings[i].certified
+            ) {
+                ActiveAssignments[currentIndex++] = assignmentListings[i];
+            }
+        }
+    }
+
+    function getMyAssignments() public view returns (AssignmentStruct[] memory MyAssignments) {
+        uint available;
+        uint currentIndex = 0;
+
+        for (uint256 i = 1; i <= _assignmentCounter.current(); i++) {
+            if (assignmentExists[i] && assignmentListings[i].owner == msg.sender) {
+                available++;
+            }
+        }
+
+        MyAssignments = new AssignmentStruct[](available);
+
+        for (uint256 i = 1; i <= _assignmentCounter.current(); i++) {
+            if (assignmentExists[i] && assignmentListings[i].owner == msg.sender) {
+                MyAssignments[currentIndex++] = assignmentListings[i];
+            }
+        }
+    }
+
+    function getAssignment(uint id) public view returns (AssignmentStruct memory) {
+        return assignmentListings[id];
+    }
+
+    function getMyAssignmentApplications() public view returns (AssignmentStruct[] memory AppliedAssignments) {
+        uint available;
+        uint currentIndex = 0;
+
+        for (uint256 i = 1; i <= _assignmentCounter.current(); i++) {
+            if (
+                assignmentExists[i] &&
+                assignmentListings[i].active &&
+                hasAppliedForAssignment[i][msg.sender]
+            ) {
+                available++;
+            }
+        }
+
+        AppliedAssignments = new AssignmentStruct[](available);
+
+        for (uint256 i = 1; i <= _assignmentCounter.current(); i++) {
+            if (
+                assignmentExists[i] &&
+                assignmentListings[i].active &&
+                hasAppliedForAssignment[i][msg.sender]
+            ) {
+                AppliedAssignments[currentIndex++] = assignmentListings[i];
+            }
+        }
+
+        return AppliedAssignments;
+    }
+
+    // Events
+    event CertificateIssued(uint indexed assignmentId, address indexed student, string title);
+
+    // Private functions
     function currentTime() internal view returns (uint256) {
         return (block.timestamp * 1000) + 1000;
     }
@@ -392,4 +558,10 @@ contract DappWorks is Ownable, ReentrancyGuard {
         (bool success, ) = payable(to).call{value: amount}("");
         require(success);
     }
+
+    function getAssignmentApplicants(uint id) public view returns (address[] memory) {
+        require(assignmentExists[id], "Assignment doesn't exist");
+        return assignmentListings[id].applicants;
+    }
 }
+

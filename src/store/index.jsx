@@ -19,6 +19,18 @@ const { setGlobalState, useGlobalState, getGlobalState } = createGlobalState({
   status: null,
   recentConversations: [],
   messages: [],
+  // New states for assignments
+  assignments: [],
+  myAssignments: [],
+  myAssignmentApplications: [],
+  assignment: null,
+  assignmentApplicants: [],
+  acceptedStudent: null,
+  assignmentStatus: false,
+  createAssignmentModal: 'scale-0',
+  updateAssignmentModal: 'scale-0',
+  deleteAssignmentModal: 'scale-0',
+  assignmentListing: null,
 })
 
 const truncate = (text, startChars, endChars, maxLength) => {

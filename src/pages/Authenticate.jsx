@@ -51,27 +51,30 @@ const Authenticate = () => {
   return (
     <>
       <Header />
+      <div className="min-h-screen bg-gradient-to-br from-[#D2C1B6] via-white to-[#456882]/10 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1B3C53]/5 to-[#234C6A]/5"></div>
+        <div className="w-full sm:w-3/5 mx-auto mt-20 px-3 relative z-10">
+          <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl border border-[#456882]/20 p-8">
+            <h1 className="text-3xl font-bold text-center bg-gradient-to-r from-[#1B3C53] to-[#234C6A] bg-clip-text text-transparent mb-4">Chats Authentication</h1>
+            <p className="text-center text-[#456882] mb-8">
+              Login or sign up to chat with your client.
+            </p>
 
-      <div className="w-full sm:w-3/5 mx-auto mt-8 px-3">
-        <h1 className="text-2xl font-bold text-center">Chats Authentication</h1>
-        <p className="text-center">
-          Login or sign up to chat with your client.
-        </p>
-
-        <div className="flex justify-center items-center space-x-3 mt-5">
-          <button
-            onClick={handleLogin}
-            className="flex justify-center items-center space-x-1 py-1 px-5 rounded-full
-          bg-blue-500 text-white max-sm:text-sm"
-          >
-            Login
-          </button>
-          <button
-            onClick={handleSignUp}
-            className="py-1 px-5 rounded-full bg-green-500 text-white max-sm:text-sm"
-          >
-            Sign up
-          </button>
+            <div className="flex justify-center items-center space-x-3">
+              <button
+                onClick={handleLogin}
+                className="inline-flex justify-center items-center space-x-2 py-3 px-8 rounded-xl bg-gradient-to-r from-[#1B3C53] to-[#234C6A] text-white font-semibold transition-all duration-300 hover:shadow-lg shadow-md max-sm:text-sm"
+              >
+                Login
+              </button>
+              <button
+                onClick={handleSignUp}
+                className="py-3 px-8 rounded-xl bg-gradient-to-r from-[#D2C1B6]/50 to-[#456882]/50 text-[#1B3C53] font-semibold transition-all duration-300 hover:shadow-md shadow-sm border border-[#456882]/20 max-sm:text-sm"
+              >
+                Sign up
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </>

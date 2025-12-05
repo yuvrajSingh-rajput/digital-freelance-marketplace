@@ -9,9 +9,12 @@ import {
   MyJobs,
   RecentConversations,
 } from './pages'
+import Assignments from './pages/Assignments'
+import MyAssignments from './pages/MyAssignments'
+import ViewAssignmentApplicants from './pages/ViewAssignmentApplicants'
 import { ToastContainer } from 'react-toastify'
 import { useEffect } from 'react'
-import { isWalletConnected } from './services/blockchain'
+import { isWalletConnected, loadAssignmentData } from './services/blockchain'
 import AuthenticatedRoutes from './utils/AuthenticatedRoutes'
 import Authenticate from './pages/Authenticate'
 import { useGlobalState } from './store'
@@ -31,6 +34,9 @@ const App = () => {
         <Route path="/viewbidders/:id" element={<ViewBidders />} />
         <Route path="/mybids" element={<MyBids />} />
         <Route path="/myjobs" element={<MyJobs />} />
+        <Route path="/assignments" element={<Assignments />} />
+        <Route path="/myassignments" element={<MyAssignments />} />
+        <Route path="/viewassignmentapplicants/:id" element={<ViewAssignmentApplicants />} />
         <Route path="/authenticate" element={<Authenticate />} />
 
         <Route element={<AuthenticatedRoutes />}>

@@ -1,48 +1,48 @@
+// New file: src/components/AssignmentListingCard.jsx - Similar to JobListingCard but free
 import React from 'react'
-import { FaEthereum } from 'react-icons/fa'
-import { bidForJob, bidStatus } from '../services/blockchain'
+import { FaCertificate } from 'react-icons/fa'
+import { applyForAssignment } from '../services/blockchain' // Assume new function
 import { toast } from 'react-toastify'
 import { useGlobalState } from '../store'
 import { useNavigate } from 'react-router-dom'
 
-const JobListingCard = ({ jobListing }) => {
+const AssignmentListingCard = ({ assignmentListing }) => {
   const [connectedAccount] = useGlobalState('connectedAccount')
   const navigate = useNavigate()
 
-  const handleBidding = async (id) => {
+  const handleApply = async (id) => {
     await toast.promise(
       new Promise(async (resolve, reject) => {
-        await bidForJob(id)
+        await applyForAssignment(id)
           .then(async () => {
-            await bidStatus(id)
             resolve()
           })
           .catch(() => reject())
       }),
       {
-        pending: 'Approve transaction...',
-        success: 'Application successful 👌',
+        pending: 'Applying...',
+        success: 'Application sent successfully 👌',
         error: 'Encountered error 🤯',
       }
     )
   }
 
   const manageAdminTasks = () => {
-    navigate('/myprojects')
+    navigate('/myassignments') // New page for my assignments
   }
 
   return (
-    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-[#456882]/20 overflow-hidden p-6 transition-all duration-300 hover:shadow-xl hover:border-[#234C6A]/30">
-      <h4 className="text-xl font-bold text-[#1B3C53] mb-3 line-clamp-2">{jobListing.jobTitle}</h4>
+    <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-[#456882]/20 overflow-hidden p-6 transition-all duration-300 hover:shadow-xl hover:border-[#234C6A]/30 mb-6">
+      <h4 className="text-xl font-bold text-[#1B3C53] mb-3 line-clamp-2">{assignmentListing.title}</h4>
       <div className="flex items-center mb-4">
-        <FaEthereum className="text-lg text-[#234C6A] mr-2" />
+        <FaCertificate className="text-lg text-[#234C6A] mr-2" />
         <span className="text-lg font-semibold text-[#456882]">
-          {parseFloat(jobListing.prize).toFixed(2)} ETH
+          Certificate on Completion
         </span>
       </div>
       <div className="flex items-center mb-4 text-sm flex-wrap gap-2">
-        {jobListing.tags.length > 0
-          ? jobListing.tags.map((tag, i) => (
+        {assignmentListing.tags.length > 0
+          ? assignmentListing.tags.map((tag, i) => (
               <span 
                 key={i} 
                 className="px-3 py-1.5 bg-gradient-to-r from-[#D2C1B6]/50 to-[#456882]/20 text-[#1B3C53] rounded-full font-medium text-xs shadow-sm"
@@ -52,19 +52,19 @@ const JobListingCard = ({ jobListing }) => {
             ))
           : null}
       </div>
-      <p className="text-[#456882]/80 text-sm leading-relaxed mb-5 line-clamp-3 pr-2">{jobListing.description}</p>
-      {connectedAccount != jobListing.owner &&
-      !jobListing.bidders.includes(connectedAccount) ? (
+      <p className="text-[#456882]/80 text-sm leading-relaxed mb-5 line-clamp-3 pr-2">{assignmentListing.description}</p>
+      {connectedAccount != assignmentListing.owner &&
+      !assignmentListing.applicants.includes(connectedAccount) ? (
         <button
-          onClick={() => handleBidding(jobListing.id)}
+          onClick={() => handleApply(assignmentListing.id)}
           className="inline-flex items-center px-4 py-2.5 bg-gradient-to-r from-[#1B3C53] to-[#234C6A] text-white font-semibold rounded-xl shadow-md hover:shadow-lg transition-all duration-300"
         >
-          Place Bid
+          Apply for Free
         </button>
-      ) : connectedAccount != jobListing.owner &&
-        jobListing.bidders.includes(connectedAccount) ? (
+      ) : connectedAccount != assignmentListing.owner &&
+        assignmentListing.applicants.includes(connectedAccount) ? (
         <button className="px-4 py-2.5 text-sm bg-gradient-to-r from-[#D2C1B6]/30 to-[#456882]/20 text-[#1B3C53] rounded-xl font-medium border border-[#456882]/20">
-          Your request is pending
+          Application Pending
         </button>
       ) : (
         <button
@@ -78,4 +78,4 @@ const JobListingCard = ({ jobListing }) => {
   )
 }
 
-export default JobListingCard
+export default AssignmentListingCard

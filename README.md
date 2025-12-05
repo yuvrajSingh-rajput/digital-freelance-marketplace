@@ -53,7 +53,7 @@ To run the demo follow these steps:
    ```sh
    yarn install
    yarn hardhat node
-   yarn hardhat run scripts/deploy.js
+   yarn hardhat run scripts/deploy.js --network localhost
    ```
 5. On another terminal, run `yarn start` to launch the project on the browser.
 6. Add some hardhat accounts, connect your wallet and interact with the app.

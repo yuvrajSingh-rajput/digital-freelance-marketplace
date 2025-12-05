@@ -45,10 +45,12 @@ const isWalletConnected = async () => {
       setGlobalState('connectedAccount', accounts[0])
       console.log('Account changed: ', accounts[0])
       await loadData()
+      await loadAssignmentData()
       await isWalletConnected()
       logOutWithCometChat()
     })
     await loadData()
+    await loadAssignmentData()
 
     if (accounts.length) {
       setGlobalState('connectedAccount', accounts[0])
@@ -70,7 +72,13 @@ const connectWallet = async () => {
     reportError(error)
   }
 }
+// Add this helper function (near the top)
+const refetchAllData = async () => {
+  await loadData();  // For jobs
+  await loadAssignmentData();  // For assignments
+};
 
+// Update addJobListing (after tx.wait)
 const addJobListing = async ({ jobTitle, description, tags, prize }) => {
   if (!ethereum) return alert('Please install Metamask')
   return new Promise(async (resolve, reject) => {
@@ -81,14 +89,14 @@ const addJobListing = async ({ jobTitle, description, tags, prize }) => {
       })
       await tx.wait()
 
-      await loadData()
+      await refetchAllData()  // NEW: Refetch everything
       resolve(tx)
     } catch (err) {
       reportError(err)
       reject(err)
     }
   })
-}
+};
 
 const updateJob = async ({ id, jobTitle, description, tags }) => {
   if (!ethereum) return alert('Please install Metamask')
@@ -227,6 +235,177 @@ const payout = async (id) => {
   })
 }
 
+// Update createAssignment (after tx.wait)
+const createAssignment = async ({ title, description, tags }) => {
+  if (!ethereum) return alert('Please install Metamask')
+  return new Promise(async (resolve, reject) => {
+    try {
+      const contract = await getEthereumContract()
+      tx = await contract.createAssignment(title, description, tags)
+      await tx.wait()
+
+      await refetchAllData()  // NEW: Refetch everything
+      resolve(tx)
+    } catch (err) {
+      reportError(err)
+      reject(err)
+    }
+  })
+};
+
+const applyForAssignment = async (id) => {
+  if (!ethereum) return alert('Please install Metamask')
+  return new Promise(async (resolve, reject) => {
+    try {
+      const contract = await getEthereumContract()
+      tx = await contract.applyForAssignment(id)
+      await tx.wait()
+
+      await getAssignments()
+      resolve(tx)
+    } catch (err) {
+      reportError(err)
+      reject(err)
+    }
+  })
+}
+
+const acceptApplicant = async (id, applicantIndex) => {
+  if (!ethereum) return alert('Please install Metamask')
+  return new Promise(async (resolve, reject) => {
+    try {
+      const contract = await getEthereumContract()
+      tx = await contract.acceptApplicant(id, applicantIndex)
+      await tx.wait()
+
+      await loadAssignmentData()
+      resolve(tx)
+    } catch (err) {
+      reportError(err)
+      reject(err)
+    }
+  })
+}
+
+const completeAssignment = async (id) => {
+  if (!ethereum) return alert('Please install Metamask')
+  return new Promise(async (resolve, reject) => {
+    try {
+      const contract = await getEthereumContract()
+      tx = await contract.completeAssignment(id)
+      await tx.wait()
+
+      await getAssignment(id)
+      resolve(tx)
+    } catch (err) {
+      reportError(err)
+      reject(err)
+    }
+  })
+}
+
+// const issueCertificate = async (id) => {
+//   if (!ethereum) return alert('Please install Metamask')
+//   return new Promise(async (resolve, reject) => {
+//     try {
+//       const contract = await getEthereumContract()
+//       tx = await contract.issueCertificate(id)
+//       await tx.wait()
+
+//       await loadAssignmentData()
+//       resolve(tx)
+//     } catch (err) {
+//       reportError(err)
+//       reject(err)
+//     }
+//   })
+// }
+
+const assignmentApplicationStatus = async (id) => {
+  if (!ethereum) return alert('Please install Metamask')
+  try {
+    const contract = await getEthereumContract()
+    const status = await contract.hasAppliedForAssignment(id, await getSignerAddress())
+    setGlobalState('assignmentStatus', status)
+  } catch (err) {
+    reportError(err)
+  }
+}
+
+// src/services/blockchain.js - Updated getAssignmentApplicants
+const getAssignmentApplicants = async (id) => {
+  if (!ethereum) return alert('Please install Metamask')
+  try {
+    const contract = await getEthereumContract()
+    const applicants = await contract.getAssignmentApplicants(id)
+    setGlobalState('assignmentApplicants', applicants.map(addr => ({ account: addr.toLowerCase(), index: 0, assignmentId: parseInt(id) }))) // Temporary, will be updated in component
+  } catch (err) {
+    reportError(err)
+  }
+}
+
+const getAcceptedStudentForAssignment = async (id) => {
+  if (!ethereum) return alert('Please install Metamask')
+  try {
+    const contract = await getEthereumContract()
+    const student = await contract.assignmentListings(id)
+    setGlobalState('acceptedStudent', student.acceptedStudent.toLowerCase())
+  } catch (err) {
+    reportError(err)
+  }
+}
+
+const getAssignments = async () => {
+  if (!ethereum) return alert('Please install Metamask')
+  try {
+    const contract = await getEthereumContract()
+    const assignments = await contract.getAssignments()
+    setGlobalState('assignments', structuredAssignments(assignments))
+  } catch (err) {
+    reportError(err)
+  }
+}
+
+const getMyAssignments = async () => {
+  if (!ethereum) return alert('Please install Metamask')
+  try {
+    const contract = await getEthereumContract()
+    const assignments = await contract.getMyAssignments()
+    setGlobalState('myAssignments', structuredAssignments(assignments))
+  } catch (err) {
+    reportError(err)
+  }
+}
+
+const getMyAssignmentApplications = async () => {
+  if (!ethereum) return alert('Please install Metamask')
+  try {
+    const contract = await getEthereumContract()
+    const assignments = await contract.getMyAssignmentApplications()
+    setGlobalState('myAssignmentApplications', structuredAssignments(assignments))
+  } catch (err) {
+    reportError(err)
+  }
+}
+
+const getAssignment = async (id) => {
+  if (!ethereum) return alert('Please install Metamask')
+  try {
+    const contract = await getEthereumContract()
+    const assignment = await contract.getAssignment(id)
+    setGlobalState('assignment', structuredAssignments([assignment])[0])
+  } catch (err) {
+    reportError(err)
+  }
+}
+
+const loadAssignmentData = async () => {
+  await getAssignments()
+  await getMyAssignments()
+  await getMyAssignmentApplications()
+}
+
+// Existing getters
 const bidStatus = async (id) => {
   if (!ethereum) return alert('Please install Metamask')
   try {
@@ -292,6 +471,7 @@ const getMyJobs = async () => {
     reportError(err)
   }
 }
+
 const getMyGigs = async () => {
   if (!ethereum) return alert('Please install Metamask')
   try {
@@ -302,6 +482,7 @@ const getMyGigs = async () => {
     reportError(err)
   }
 }
+
 const getMyBidJobs = async () => {
   if (!ethereum) return alert('Please install Metamask')
   try {
@@ -331,6 +512,7 @@ const loadData = async () => {
   await getMyBidJobs()
 }
 
+// Structuring functions
 const structuredJobs = (jobs) =>
   jobs
     .map((job) => ({
@@ -349,6 +531,23 @@ const structuredJobs = (jobs) =>
     }))
     .sort((a, b) => b.timestamp - a.timestamp)
 
+const structuredAssignments = (assignments) =>
+  assignments
+    .map((assignment) => ({
+      id: assignment.id.toNumber(),
+      owner: assignment.owner.toLowerCase(),
+      acceptedStudent: assignment.acceptedStudent.toLowerCase(),
+      title: assignment.title,
+      description: assignment.description,
+      tags: assignment.tags.split(','),
+      completed: assignment.completed,
+      certified: assignment.certified,
+      timestamp: assignment.timestamp,
+      active: assignment.active,
+      applicants: assignment.applicants.map((addr) => addr.toLowerCase()),
+    }))
+    .sort((a, b) => b.timestamp - a.timestamp)
+
 const structuredBidder = (bidders) =>
   bidders.map((bidder) => ({
     id: bidder.id.toNumber(),
@@ -362,7 +561,39 @@ const structuredFreelancers = (freelancers) =>
     jId: freelancer.jId.toNumber(),
     account: freelancer.account.toLowerCase(),
     bool: freelancer.isAssigned,
-  }))
+  }));
+
+const issueCertificate = async (id) => {
+  if (!ethereum) return alert('Please install Metamask')
+  return new Promise(async (resolve, reject) => {
+    try {
+      const contract = await getEthereumContract()
+      tx = await contract.issueCertificate(id)
+      const receipt = await tx.wait()
+      const txHash = receipt.transactionHash
+
+      // Get details for modal
+      await getAssignment(id)
+      const assignment = getGlobalState('assignment')
+      const connectedAccount = getGlobalState('connectedAccount')
+
+      // Show certificate modal
+      setGlobalState('showCertificateModal', true)
+      setGlobalState('certificateData', { 
+        assignment, 
+        txHash, 
+        issuer: connectedAccount,
+        date: new Date().toLocaleDateString()
+      })
+
+      await loadAssignmentData()
+      resolve(tx)
+    } catch (err) {
+      reportError(err)
+      reject(err)
+    }
+  })
+};
 
 export {
   connectWallet,
@@ -386,4 +617,18 @@ export {
   getMyBidJobs,
   getMyGigs,
   loadData,
+  // New exports for assignments
+  createAssignment,
+  applyForAssignment,
+  acceptApplicant,
+  completeAssignment,
+  issueCertificate,
+  assignmentApplicationStatus,
+  getAssignmentApplicants,
+  getAcceptedStudentForAssignment,
+  getAssignments,
+  getMyAssignments,
+  getMyAssignmentApplications,
+  getAssignment,
+  loadAssignmentData
 }

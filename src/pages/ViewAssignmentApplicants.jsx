@@ -1,22 +1,24 @@
+// src/pages/ViewAssignmentApplicants.jsx
 import React, { useEffect } from 'react'
-import { getBidders, getJob } from '../services/blockchain'
+import { getAssignmentApplicants, getAssignment } from '../services/blockchain'
 import { useParams } from 'react-router-dom'
 import { useGlobalState } from '../store'
-import { ApplicantsCard, Header } from '../components'
+import { Header } from '../components'
+import AssignmentApplicantsCard from '../components/AssignmentApplicantsCard'
 
-const ViewBidders = () => {
+const ViewAssignmentApplicants = () => {
   const { id } = useParams()
-  const [bidders] = useGlobalState('bidders')
-  const [job] = useGlobalState('job')
+  const [applicants] = useGlobalState('assignmentApplicants')
+  const [assignment] = useGlobalState('assignment')
 
-  const fetchBidders = async () => {
-    await getBidders(id)
-    await getJob(id)
+  const fetchApplicants = async () => {
+    await getAssignmentApplicants(id)
+    await getAssignment(id)
   }
 
   useEffect(() => {
-    fetchBidders()
-  }, [])
+  fetchApplicants()
+}, [id])  // Depend on id for re-fetch on page load
 
   return (
     <div className="bg-gradient-to-br from-[#D2C1B6] via-white to-[#456882]/10 min-h-screen relative overflow-hidden">
@@ -25,20 +27,20 @@ const ViewBidders = () => {
       <div className="mt-8 px-4 sm:px-8 relative z-10">
         <div className="max-w-4xl mx-auto">
           <h2 className="text-3xl font-bold text-[#1B3C53] mb-8 bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg border border-[#456882]/20 text-center">
-            {bidders?.length > 0
+            {applicants?.length > 0
               ? 'Applicants'
-              : !job?.listed
-              ? 'Position Filled'
+              : !assignment?.active
+              ? 'Student Selected'
               : 'No Applicants Yet'}
           </h2>
           <div className="space-y-6">
-            {bidders?.length > 0
-              ? bidders.map((bidder, i) => (
-                  <ApplicantsCard key={i} bidder={bidder} />
+            {applicants?.length > 0
+              ? applicants.map((applicant, i) => (
+                  <AssignmentApplicantsCard key={i} applicant={applicant} />
                 ))
               : <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-12 text-center shadow-lg border border-[#456882]/20">
                   <p className="text-[#456882] text-lg italic">
-                    {!job?.listed ? 'This position has been filled. Great job!' : 'No applicants yet. Your job will appear here once someone applies.'}
+                    {!assignment?.active ? 'Student has been selected. Great job!' : 'No applicants yet. Your assignment will appear here once someone applies.'}
                   </p>
                 </div>}
           </div>
@@ -48,4 +50,4 @@ const ViewBidders = () => {
   )
 }
 
-export default ViewBidders
+export default ViewAssignmentApplicants
