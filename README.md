@@ -1,4 +1,5 @@
-# Build a Decentralized Freelance Marketplace Dapp with Next.js, TypeScript, Tailwind CSS, and CometChat
+# FreelanceForge: A decentralized application powered by blockchain
+<!-- # Build a Decentralized Freelance Marketplace Dapp with Next.js, TypeScript, Tailwind CSS, and CometChat
 
 This example shows How to Build a Decentralized Voting Dapp with Next.js, TypeScript, Tailwind CSS, and CometChat:
 
@@ -12,7 +13,7 @@ This example shows How to Build a Decentralized Voting Dapp with Next.js, TypeSc
 
 ![One-on-One Chat](./screenshots/3.gif)
 
-<center><figcaption>One-on-One Chat</figcaption></center>
+<center><figcaption>One-on-One Chat</figcaption></center> -->
 
 ## Technology
 
